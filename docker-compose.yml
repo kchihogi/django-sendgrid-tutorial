@@ -1,0 +1,36 @@
+version: "3.8"
+services:
+  web:
+    build: 
+      context: .
+      dockerfile: ./.devcontainer/Dockerfile
+    volumes:
+      - .:/workspace:cached
+    environment:
+      TZ: "Asia/Tokyo"
+    command: sleep infinity
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    volumes:
+      - django_sendgrid_tutorial_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: sendgrid_db
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - 8080:80
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=${PMA_USER}
+      - PMA_PASSWORD=${PMA_PASSWORD}
+
+volumes:
+    django_sendgrid_tutorial_data:
