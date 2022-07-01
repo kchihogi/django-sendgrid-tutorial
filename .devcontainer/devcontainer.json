@@ -32,15 +32,15 @@
 			"--load-plugins",
 			"pylint_django",
 			"--disable=django-not-configured",
-			// "--django-settings-module=portfolio_site.settings",
+			"--django-settings-module=contact_form.contact_form.settings",
 			"--ignore",
 			"manage.py,0001_initial.py"
 			],
 		"python.testing.pytestEnabled": false,
 		"python.testing.unittestArgs": [
 			"-v",
-			// "-s",
-			// "./web/portfolio_site",
+			"-s",
+			"./contact_form",
 			"-p",
 			"test_*.py"
 			],
