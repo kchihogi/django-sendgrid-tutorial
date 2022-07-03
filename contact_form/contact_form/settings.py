@@ -41,6 +41,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "contact",
     "debug_toolbar",
     'django.contrib.admin',
     'django.contrib.auth',
