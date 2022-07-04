@@ -22,6 +22,6 @@ from contact import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('__debug__/', include('debug_toolbar.urls')),
-    path('contact/', views.ContactView.as_view(), name='contact'),
+    path('contact/', include('contact.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

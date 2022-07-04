@@ -4,13 +4,25 @@ from mailbox import _mboxMMDFMessage
 from socket import MsgFlag
 from django.core.mail import get_connection
 from django.core.mail.message import EmailMultiAlternatives
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
 from django.views import View
+from django.urls import reverse
 
 from .forms import ContactForm
 from .models import Bcc, MailSetting
 from .exceptions import NeedDBMasterException
+
+def success(request:HttpRequest):
+    """The success page to send e-mail.
+
+    Args:
+        request (HttpRequest): Request.
+
+    Returns:
+        HttpResponse: response.
+    """
+    return render(request, 'contact/success.html')
 
 class ContactView(View):
     """The view of contact page.
@@ -50,7 +62,7 @@ class ContactView(View):
             connection = get_connection()
             mail = EmailMultiAlternatives(
                 subject=subject
-                , message=message
+                , body=message
                 , from_email=setting.sender
                 , to={customer_email}
                 , connection=connection
@@ -63,7 +75,7 @@ class ContactView(View):
                 msg = 'Failed to send mail.'
                 context = {'form': form, 'error_message': msg}
                 return render(request, 'contact/contact.html', context)
-            return render(request, 'contact/success.html')
+            return HttpResponseRedirect(reverse('contact:success'))
         else:
             context = {'form': form}
             return render(request, 'contact/contact.html', context)
