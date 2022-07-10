@@ -4,9 +4,6 @@
 
 <form action="" method="post">
     {% csrf_token %}
-    {% if error_message %}
-    <p>{{error_message}}</p>
-    {% endif %}
     <tr>
         <th>
             <label for="id_name">Name:</label>
@@ -39,5 +36,8 @@
             <textarea name="message" cols="40" rows="10" required id="id_message"></textarea>
         </td>
     </tr>
+    {% if error_message %}
+    <p>{{error_message}}</p>
+    {% endif %}
     <input type="submit" value="Submit">
 </form>
