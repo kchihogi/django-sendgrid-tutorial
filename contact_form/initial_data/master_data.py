@@ -3,6 +3,8 @@
 from contact.models import Bcc, MailSetting
 
 def add_mail_setting():
+    """This inserts records of mail setting.
+    """
     # DB データを全削除
     for record in MailSetting.objects.all():
         record.delete()
@@ -13,6 +15,8 @@ def add_mail_setting():
     setting.save()
 
 def add_bcc():
+    """This inserts records of BCC.
+    """
     # DB データを全削除
     for record in Bcc.objects.all():
         record.delete()

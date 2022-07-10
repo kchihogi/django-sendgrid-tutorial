@@ -33,7 +33,7 @@ class ContactView(View):
             HttpResponse: response.
         """
         try:
-            self._getSettings()
+            self._get_settings()
         except NeedDBMasterException:
             return render(request, 'contact/maintenance.html')
         form = ContactForm()
@@ -54,13 +54,16 @@ class ContactView(View):
             customer_message = form.cleaned_data['message']
 
             try:
-                bcc, setting = self._getSettings()
+                bcc, setting = self._get_settings()
             except NeedDBMasterException:
                 return render(request, 'contact/maintenance.html')
 
-            subject = self._makeSubject('mail/contact_reply_subject.txt')
-            parm = {'name': customer_name, 'subject' : customer_subject, 'message' : customer_message}
-            body = self._makeBody('mail/contact_reply_body.txt', parm)
+            subject = self._make_subject('mail/contact_reply_subject.txt')
+            parm = {'name': customer_name
+            , 'subject' : customer_subject
+            , 'message' : customer_message
+            }
+            body = self._make_body('mail/contact_reply_body.txt', parm)
 
             connection = get_connection()
             mail = EmailMultiAlternatives(
@@ -90,11 +93,10 @@ class ContactView(View):
             form.save()
             customer.save()
             return HttpResponseRedirect(reverse('contact:success'))
-        else:
-            context = {'form': form}
-            return render(request, 'contact/contact.html', context)
+        context = {'form': form}
+        return render(request, 'contact/contact.html', context)
 
-    def _getSettings(self):
+    def _get_settings(self):
         """Get Bcc list and the last e-mail setting.
 
         Raises:
@@ -114,24 +116,26 @@ class ContactView(View):
 
         return bcc, setting
 
-    def _makeBody(self, template:str, context=None):
+    def _make_body(self, template:str, context=None):
         """Make a body from a template.
 
         Args:
             template (str): template name.
-            context (Any, optional): template is replaced with the context specified. Defaults to None.
+            context (Any, optional): template is replaced with the context specified.
+             Defaults to None.
 
         Returns:
             str: body
         """
         return render_to_string(template, context)
 
-    def _makeSubject(self, template:str, context=None):
+    def _make_subject(self, template:str, context=None):
         """Make a subject from a template.
 
         Args:
             template (str): template name.
-            context (Any, optional): template is replaced with the context specified. Defaults to None.
+            context (Any, optional): template is replaced with the context specified.
+             Defaults to None.
 
         Returns:
             str: subject
