@@ -3,7 +3,15 @@
 <link rel="stylesheet" type="text/css" href="{% static 'contact/contact.css' %}">
 
 <form action="" method="post">
-    <input type="hidden" name="csrfmiddlewaretoken" value="yTF5g7ceTgkwsOimKxZpuV10DG4a1TWFwQ60pneu047lPvu6kTAlNYPfYEC9G8jq">
+    {% csrf_token %}
+    <tr>
+        <th>
+            <label for="id_name">Name:</label>
+        </th>
+        <td>
+            <input type="text" name="name" maxlength="100" required id="id_name">
+        </td>
+    </tr>
     <tr>
         <th>
             <label for="id_email">Email:</label>
@@ -28,5 +36,8 @@
             <textarea name="message" cols="40" rows="10" required id="id_message"></textarea>
         </td>
     </tr>
+    {% if error_message %}
+    <p>{{error_message}}</p>
+    {% endif %}
     <input type="submit" value="Submit">
 </form>
