@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.views import View
 
 from .forms import ContactForm
-from .models import Bcc, MailSetting
+from .models import Bcc, Customer, MailSetting
 from .exceptions import NeedDBMasterException
 
 def success(request:HttpRequest):
@@ -48,7 +48,6 @@ class ContactView(View):
         """
         form = ContactForm(request.POST)
         if form.is_valid():
-            form.save()
             customer_name = form.cleaned_data["name"]
             customer_email = form.cleaned_data["email"]
             customer_subject = form.cleaned_data["subject"]
@@ -74,11 +73,22 @@ class ContactView(View):
             )
 
             try:
+                customer = Customer.objects.get(email=customer_email)
+            except Customer.DoesNotExist:
+                customer = Customer(name=customer_name, email=customer_email)
+            customer.name = customer_name
+            customer.count =customer.count + 1
+
+            try:
                 mail.send()
             except:
                 msg = 'Failed to send mail.'
                 context = {'form': form, 'error_message': msg}
+                customer.valid = False
+                customer.save()
                 return render(request, 'contact/contact.html', context)
+            form.save()
+            customer.save()
             return HttpResponseRedirect(reverse('contact:success'))
         else:
             context = {'form': form}
