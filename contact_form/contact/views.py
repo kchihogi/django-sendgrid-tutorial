@@ -1,5 +1,7 @@
 """Contact views.
 """
+from smtplib import SMTPException
+
 from django.core.mail import get_connection
 from django.core.mail.message import EmailMultiAlternatives
 from django.http import HttpRequest, HttpResponseRedirect
@@ -33,7 +35,7 @@ class ContactView(View):
             HttpResponse: response.
         """
         try:
-            self._getSettings()
+            self._get_settings()
         except NeedDBMasterException:
             return render(request, 'contact/maintenance.html')
         form = ContactForm()
@@ -48,53 +50,21 @@ class ContactView(View):
         """
         form = ContactForm(request.POST)
         if form.is_valid():
-            customer_name = form.cleaned_data["name"]
-            customer_email = form.cleaned_data["email"]
-            customer_subject = form.cleaned_data["subject"]
-            customer_message = form.cleaned_data['message']
-
             try:
-                bcc, setting = self._getSettings()
+                self._send_mail(form)
             except NeedDBMasterException:
                 return render(request, 'contact/maintenance.html')
-
-            subject = self._makeSubject('mail/contact_reply_subject.txt')
-            parm = {'name': customer_name, 'subject' : customer_subject, 'message' : customer_message}
-            body = self._makeBody('mail/contact_reply_body.txt', parm)
-
-            connection = get_connection()
-            mail = EmailMultiAlternatives(
-                subject=subject
-                , body=body
-                , from_email=setting.sender
-                , to={customer_email}
-                , connection=connection
-                , bcc=bcc
-            )
-
-            try:
-                customer = Customer.objects.get(email=customer_email)
-            except Customer.DoesNotExist:
-                customer = Customer(name=customer_name, email=customer_email)
-            customer.name = customer_name
-            customer.count =customer.count + 1
-
-            try:
-                mail.send()
-            except:
+            except SMTPException:
                 msg = 'Failed to send mail.'
                 context = {'form': form, 'error_message': msg}
-                customer.valid = False
-                customer.save()
                 return render(request, 'contact/contact.html', context)
             form.save()
-            customer.save()
+            self._save_customer_info(form)
             return HttpResponseRedirect(reverse('contact:success'))
-        else:
-            context = {'form': form}
-            return render(request, 'contact/contact.html', context)
+        context = {'form': form}
+        return render(request, 'contact/contact.html', context)
 
-    def _getSettings(self):
+    def _get_settings(self):
         """Get Bcc list and the last e-mail setting.
 
         Raises:
@@ -114,26 +84,51 @@ class ContactView(View):
 
         return bcc, setting
 
-    def _makeBody(self, template:str, context=None):
-        """Make a body from a template.
+    def _send_mail(self, form:ContactForm):
+        """Send e-mail of the contact form.
+
+        Raises:
+            NeedDBMasterException: Bcc list is zero or email-setting is not found.
+            SMTPException: An error to send e-mail.
 
         Args:
-            template (str): template name.
-            context (Any, optional): template is replaced with the context specified. Defaults to None.
-
-        Returns:
-            str: body
+            form (ContactForm): The model form of the contact table.
         """
-        return render_to_string(template, context)
+        # prep
+        bcc, setting = self._get_settings()
 
-    def _makeSubject(self, template:str, context=None):
-        """Make a subject from a template.
+        # make
+        subject = render_to_string('mail/contact_reply_subject.txt')
+        parm = {'name': form.cleaned_data["name"]
+        , 'subject' : form.cleaned_data["subject"]
+        , 'message' : form.cleaned_data['message']
+        }
+        body = render_to_string('mail/contact_reply_body.txt', parm)
+
+        # send
+        connection = get_connection()
+        mail = EmailMultiAlternatives(
+            subject=subject
+            , body=body
+            , from_email=setting.sender
+            , to={form.cleaned_data["email"]}
+            , connection=connection
+            , bcc=bcc
+        )
+        mail.send()
+
+    def _save_customer_info(self, form:ContactForm):
+        """save the customer info with grouping by e-mail.
 
         Args:
-            template (str): template name.
-            context (Any, optional): template is replaced with the context specified. Defaults to None.
-
-        Returns:
-            str: subject
+            form (ContactForm): The model form of the contact table.
         """
-        return render_to_string(template, context)
+        customer_name = form.cleaned_data["name"]
+        customer_email = form.cleaned_data["email"]
+        try:
+            customer = Customer.objects.get(email=customer_email)
+        except Customer.DoesNotExist:
+            customer = Customer(name=customer_name, email=customer_email)
+        customer.name = customer_name
+        customer.count =customer.count + 1
+        customer.save()
