@@ -61,7 +61,8 @@ class ContactView(View):
             form.save()
             self._save_customer_info(form)
             return HttpResponseRedirect(reverse('contact:success'))
-        context = {'form': form}
+        msg = 'Invalid inquiry.'
+        context = {'form': form, 'error_message': msg}
         return render(request, 'contact/contact.html', context)
 
     def _get_settings(self):

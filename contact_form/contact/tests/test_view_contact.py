@@ -29,3 +29,21 @@ class ContactViewTest(TestCase):
         master_data.add_bcc()
         response = self.client.get(reverse('contact:contact'))
         self.assertContains(response=response, text='Maintenance')
+
+    def test_contact_page(self):
+        """If settings are properly resistered, the contact page is returned with 200.
+        """
+        master_data.add_mail_setting()
+        master_data.add_bcc()
+        response = self.client.get(reverse('contact:contact'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response=response, text='Error:')
+
+    def test_post_form_without_inputs(self):
+        """If posting the contact form without inputs , it is returned with error info.
+        """
+        master_data.add_mail_setting()
+        master_data.add_bcc()
+        response = self.client.post(reverse('contact:contact'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response=response, text='Error:')
